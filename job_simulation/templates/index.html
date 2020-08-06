@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Job Simulation</title>
+	<style type="text/css">
+		#content {
+			display: block;
+		    margin-left: auto;
+		    margin-right: auto;
+		    width: 40%;
+		}
+		table, th, td {
+		  border: 3px solid black;
+		  border-collapse: collapse;
+		}
+	</style>
+
+</head>
+<body>
+	<div id="content">
+
+		<textarea id="text" rows=25 cols=45 placeholder="Type or copy/paste a text for classification..." autocomplete="off"></textarea>
+
+		<br><br>
+
+		<select name="model" id="model">
+			<option value="tfidf">TF-iDF</option>
+			<option value="shallow">Shallow NN</option>
+			<option value="fasttext">fasttext</option>
+			<option value="bert">BERT</option>
+		</select>
+
+		<button id="submit-button" onclick=onSubmitForClassification()>Submit</button>
+		<button id="clean-button" onclick=onCleanText()>Clean</button>
+
+		<br><br>
+
+		<div id="errors">
+		</div>
+
+		<div id="classification-table">
+		</div>
+
+	</div>
+
+	<script type="text/javascript">
+
+		function dictionaryToTable(dict) {
+			let table = "<table>"
+			table += "<tr><th>Class</th><th>Probability</th></tr>"
+			for (let key in dict) {
+				if (dict.hasOwnProperty(key)) {
+					var tr = "<tr>";
+					tr += "<td>" + key + "</td>" + "<td>" + dict[key].toString() + "</td></tr>";
+					table += tr;
+				}
+			}
+			table += "</table>"
+			return table
+		}
+
+		function onSubmitForClassification() {
+			const queryInput = document.getElementById('text');
+			const resultsDiv = document.getElementById('classification-table');
+			const errorsDiv = document.getElementById('errors')
+			const model = document.getElementById('model')
+
+			const maxOutputTextLen = 20
+
+			queryInput.focus();
+
+			errorsDiv.innerText = '';
+			resultsDiv.innerHTML = '';
+
+			if (queryInput.value.length === 0) {
+				errorsDiv.innerText = 'Please, provide some text for classification in the form above'
+			} else {
+				xhttp = new XMLHttpRequest();
+				xhttp.onreadystatechange = function() {
+					if (this.readyState === 4 && this.status === 200) {
+						errorsDiv.innerText = '';
+						const responseData = JSON.parse(this.responseText)
+						console.log(this.responseText)
+						resultsDiv.innerHTML = 'model: ' +responseData['model']
+						resultsDiv.innerHTML += '<br>'
+						if (responseData['text'].length > maxOutputTextLen) {
+							resultsDiv.innerHTML += 'text: ' + responseData['text'].substring(0, maxOutputTextLen) + '...'
+						}
+						else {
+							resultsDiv.innerHTML += 'text: ' + responseData['text']
+						}
+						resultsDiv.innerHTML += '<br><br>'
+						resultsDiv.innerHTML += dictionaryToTable(responseData['classification'])
+					}
+					else {
+						errorsDiv.innerText = 'unknown error';
+					}
+				};
+				xhttp.open('POST', '/resolve', true);
+				xhttp.setRequestHeader('Content-Type', 'application/json');
+				xhttp.send(JSON.stringify({'text': queryInput.value, 'model' : model.options[model.selectedIndex].value}));
+			}
+		}
+
+		function onCleanText() {
+			const queryInput = document.getElementById('text');
+			const resultsDiv = document.getElementById('classification-table');
+			const errorsDiv = document.getElementById('errors')
+			queryInput.value = ''
+			resultsDiv.innerHTML = ''
+			errorsDiv.innerText = ''
+		}
+	</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+contractions<0.0.26,>=0.0.25
+cython<0.30.0,>=0.29.21
+fasttext==0.9.2
+flask<2.0.0,>=1.1.2
+marshmallow<4.0.0,>=3.6.1
+nltk<4.0,>=3.5
+sklearn<0.1,>=0.0
